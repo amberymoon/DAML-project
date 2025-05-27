@@ -1,8 +1,11 @@
-# File di dati e output
 *.dat
 *.pkl
 *.csv
-
-# Ignore raw data folder, you can find the following data using the drive folder in the README:md
+Data
 data_images/
 data_histo/
+.venv
+.python-version
+uv.lock
+main.py
+pyproject.toml
