@@ -37,6 +37,7 @@ dependencies = [
     "tensorflow-hub>=0.16.1",
     "tensorflow-serving-api>=2.14.0",
     "torch>=2.7.0",
+    "torchsummary>=1.5.1",
     "torchvision>=0.22.0",
     "tqdm>=4.67.1",
     "transformers>=4.51.3",
