@@ -6,3 +6,4 @@
 # Ignore raw data folder, you can find the following data using the drive folder in the README:md
 data_images/
 data_histo/
+Data/
