@@ -1,18 +1,11 @@
 
 from torchvision.datasets import ImageFolder
-from torch.utils.data import DataLoader, ConcatDataset, Dataset
-import sys
-import os
+from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
-import torch.optim as optim
-from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score
-import modules.strings as strings
-import numpy as np
-from pprint import pprint
 import modules.custom_transforms as custom
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 
 def augment_dataset(dataset_path, times=2)-> list[ImageFolder]:
     default = ImageFolder(root=dataset_path, transform=custom.base_transform)
@@ -76,3 +69,62 @@ def map_datasets(datasets: list[ImageFolder]):
                 targets.append(labels)
 
     return torch.cat(results, dim=0), torch.cat(targets, dim=0)
+
+
+def check_balanced(x, y) -> bool:
+    targets, counts = torch.unique(y, return_counts=True)
+
+    if min(counts).item() == max(counts).item():
+        return True, targets, counts
+    else:
+        return False, targets, counts
+
+
+def balance(x, y, idx=613):
+    xCopy, yCopy = x.clone(), y.clone()
+    new_x = xCopy[:idx, :]
+    new_y = yCopy[:idx]
+    balanced, targets, counts = check_balanced(new_x, new_y)
+    print("initial counts: ", targets, counts)
+    print("initial length: ", len(new_y))
+
+    if balanced:
+        return new_x, new_y
+
+    xToBeUsed = xCopy[idx:, :]
+    yToBeUsed = yCopy[idx:]
+    
+    gen = torch.Generator()
+    perm = torch.randperm(xToBeUsed.size(0), generator=gen.manual_seed(42))
+    xToBeUsed = xToBeUsed[perm, :]
+    yToBeUsed = yToBeUsed[perm]
+
+    while not balanced:
+        leastPresentTarget = targets[counts.argmin()]
+
+        new_idx = (yToBeUsed == leastPresentTarget).nonzero(as_tuple=True)[0][0].item() # takes first element
+        new_x = torch.cat((new_x, xToBeUsed[new_idx, :].unsqueeze(0)), dim=0)
+        new_y = torch.cat((new_y, yToBeUsed[new_idx].unsqueeze(0)), dim=0)
+        xToBeUsed = torch.cat((xToBeUsed[:new_idx], xToBeUsed[new_idx + 1:]), dim=0)
+        yToBeUsed = torch.cat((yToBeUsed[:new_idx], yToBeUsed[new_idx + 1:]), dim=0)
+
+        balanced, targets, counts = check_balanced(new_x, new_y)
+
+    print("final counts: ", targets, counts)
+    print("final length: ", len(new_y))
+    return new_x, new_y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
